@@ -1,28 +1,150 @@
+# Firebase Data Connect — PostgreSQL Schema
+# Structured, relational data: Venue, Promotion, Boost, Subscription, User
+
+# ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  FAN
+  ORGANISER
+  VENUE_OWNER
+  ADMIN
+}
+
+enum SubscriptionPlan {
+  FREE
+  FAN_PLUS
+  VENUE_PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  TRIALING
+}
+
+enum PromotionType {
+  MATCH_DAY_DEAL
+  HAPPY_HOUR
+  FAN_DISCOUNT
+  LOYALTY_REWARD
+  SPONSORED
+}
+
+enum BoostStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+}
+
+# ── User ───────────────────────────────────────────────────────────────────────
+
 type User @table {
   id: UUID! @default(expr: "uuidV4()")
+  firebaseUid: String! @unique
   displayName: String!
   email: String! @unique
-  role: String! @default(value: "fan")
+  role: UserRole! @default(value: "FAN")
   avatarUrl: String
+  city: String
   createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+
+  # Relations
+  subscription: Subscription @relation(fields: ["id"], references: ["userId"])
 }
 
-type Match @table {
+# ── Venue ──────────────────────────────────────────────────────────────────────
+
+type Venue @table {
   id: UUID! @default(expr: "uuidV4()")
-  homeTeam: String!
-  awayTeam: String!
-  competition: String!
-  kickoffAt: Timestamp!
-  venue: String!
+  name: String!
+  slug: String! @unique
+  description: String
+  address: String!
   city: String!
+  province: String!
+  postalCode: String
+  country: String! @default(value: "CA")
+  latitude: Float
+  longitude: Float
+  capacity: Int
+  websiteUrl: String
+  phoneNumber: String
+  logoUrl: String
+  coverImageUrl: String
+  isVerified: Boolean! @default(value: false)
+  ownerId: UUID!                       # FK → User.id (venue owner)
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+
+  # Relations
+  promotions: [Promotion!]! @relation(fields: ["id"], references: ["venueId"])
 }
 
-type Gig @table {
+# ── Promotion ─────────────────────────────────────────────────────────────────
+
+type Promotion @table {
   id: UUID! @default(expr: "uuidV4()")
+  venueId: UUID!                       # FK → Venue.id
   title: String!
   description: String!
-  city: String!
-  postedBy: User!
-  createdAt: Timestamp! @default(expr: "request.time")
+  type: PromotionType!
+  imageUrl: String
+  termsUrl: String
+  startsAt: Timestamp!
   expiresAt: Timestamp
+  isActive: Boolean! @default(value: true)
+  redemptionLimit: Int                 # null = unlimited
+  redemptionCount: Int! @default(value: 0)
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+
+  # Relations
+  venue: Venue! @relation(fields: ["venueId"], references: ["id"])
+  boosts: [Boost!]! @relation(fields: ["id"], references: ["promotionId"])
+}
+
+# ── Boost ─────────────────────────────────────────────────────────────────────
+
+type Boost @table {
+  id: UUID! @default(expr: "uuidV4()")
+  promotionId: UUID!                   # FK → Promotion.id
+  status: BoostStatus! @default(value: "DRAFT")
+  targetCity: String
+  targetRadiusKm: Float
+  targetMinAge: Int
+  targetMaxAge: Int
+  targetTeamId: String                 # e.g. "toronto-fc" — match fan segments
+  budgetCents: Int!                    # Total budget in cents
+  spentCents: Int! @default(value: 0)
+  impressions: Int! @default(value: 0)
+  clicks: Int! @default(value: 0)
+  startsAt: Timestamp!
+  expiresAt: Timestamp!
+  createdAt: Timestamp! @default(expr: "request.time")
+
+  # Relations
+  promotion: Promotion! @relation(fields: ["promotionId"], references: ["id"])
+}
+
+# ── Subscription ──────────────────────────────────────────────────────────────
+
+type Subscription @table {
+  id: UUID! @default(expr: "uuidV4()")
+  userId: UUID! @unique                # FK → User.id (one subscription per user)
+  plan: SubscriptionPlan! @default(value: "FREE")
+  status: SubscriptionStatus! @default(value: "ACTIVE")
+  stripeCustomerId: String
+  stripeSubscriptionId: String
+  currentPeriodStart: Timestamp
+  currentPeriodEnd: Timestamp
+  cancelledAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+
+  # Relations
+  user: User! @relation(fields: ["userId"], references: ["id"])
 }

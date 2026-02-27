@@ -1,4 +1,89 @@
 {
-    "indexes": [],
+    "indexes": [
+        {
+            "collectionGroup": "fixtures",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "city",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "kickoffAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "fixtures",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "competition",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "kickoffAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "checkIns",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "fixtureId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "userId",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "checkIns",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "fixtureId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "checkIns",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "venueId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "gigs",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "city",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        }
+    ],
     "fieldOverrides": []
 }

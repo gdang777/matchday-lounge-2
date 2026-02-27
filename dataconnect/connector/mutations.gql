@@ -1,0 +1,143 @@
+# MatchDay Lounge — Data Connect Write Mutations (PostgreSQL)
+
+# ── Venues ────────────────────────────────────────────────────────────────────
+
+mutation CreateVenue(
+  $name: String!
+  $slug: String!
+  $description: String
+  $address: String!
+  $city: String!
+  $province: String!
+  $postalCode: String
+  $capacity: Int
+  $websiteUrl: String
+  $phoneNumber: String
+  $ownerId: UUID!
+) @auth(level: USER_EMAIL_VERIFIED) {
+  venue_insert(data: {
+    name: $name
+    slug: $slug
+    description: $description
+    address: $address
+    city: $city
+    province: $province
+    postalCode: $postalCode
+    capacity: $capacity
+    websiteUrl: $websiteUrl
+    phoneNumber: $phoneNumber
+    ownerId: $ownerId
+  })
+}
+
+mutation UpdateVenue(
+  $id: UUID!
+  $name: String
+  $description: String
+  $capacity: Int
+  $websiteUrl: String
+  $isVerified: Boolean
+) @auth(level: USER_EMAIL_VERIFIED) {
+  venue_update(key: { id: $id }, data: {
+    name: $name
+    description: $description
+    capacity: $capacity
+    websiteUrl: $websiteUrl
+    isVerified: $isVerified
+  })
+}
+
+# ── Promotions ────────────────────────────────────────────────────────────────
+
+mutation CreatePromotion(
+  $venueId: UUID!
+  $title: String!
+  $description: String!
+  $type: PromotionType!
+  $imageUrl: String
+  $startsAt: Timestamp!
+  $expiresAt: Timestamp
+  $redemptionLimit: Int
+) @auth(level: USER_EMAIL_VERIFIED) {
+  promotion_insert(data: {
+    venueId: $venueId
+    title: $title
+    description: $description
+    type: $type
+    imageUrl: $imageUrl
+    startsAt: $startsAt
+    expiresAt: $expiresAt
+    redemptionLimit: $redemptionLimit
+  })
+}
+
+mutation DeactivatePromotion($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  promotion_update(key: { id: $id }, data: { isActive: false })
+}
+
+# ── Boosts ────────────────────────────────────────────────────────────────────
+
+mutation CreateBoost(
+  $promotionId: UUID!
+  $targetCity: String
+  $targetRadiusKm: Float
+  $targetTeamId: String
+  $budgetCents: Int!
+  $startsAt: Timestamp!
+  $expiresAt: Timestamp!
+) @auth(level: USER_EMAIL_VERIFIED) {
+  boost_insert(data: {
+    promotionId: $promotionId
+    targetCity: $targetCity
+    targetRadiusKm: $targetRadiusKm
+    targetTeamId: $targetTeamId
+    budgetCents: $budgetCents
+    startsAt: $startsAt
+    expiresAt: $expiresAt
+    status: DRAFT
+  })
+}
+
+mutation ActivateBoost($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  boost_update(key: { id: $id }, data: { status: ACTIVE })
+}
+
+mutation PauseBoost($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  boost_update(key: { id: $id }, data: { status: PAUSED })
+}
+
+# ── Subscriptions ─────────────────────────────────────────────────────────────
+
+mutation CreateSubscription(
+  $userId: UUID!
+  $plan: SubscriptionPlan!
+  $stripeCustomerId: String
+  $stripeSubscriptionId: String
+  $currentPeriodStart: Timestamp
+  $currentPeriodEnd: Timestamp
+) @auth(level: USER_EMAIL_VERIFIED) {
+  subscription_insert(data: {
+    userId: $userId
+    plan: $plan
+    status: ACTIVE
+    stripeCustomerId: $stripeCustomerId
+    stripeSubscriptionId: $stripeSubscriptionId
+    currentPeriodStart: $currentPeriodStart
+    currentPeriodEnd: $currentPeriodEnd
+  })
+}
+
+mutation UpdateSubscription(
+  $userId: UUID!
+  $plan: SubscriptionPlan
+  $status: SubscriptionStatus
+  $currentPeriodEnd: Timestamp
+  $cancelledAt: Timestamp
+) @auth(level: USER_EMAIL_VERIFIED) {
+  subscription_update(key: { userId: $userId }, data: {
+    plan: $plan
+    status: $status
+    currentPeriodEnd: $currentPeriodEnd
+    cancelledAt: $cancelledAt
+  })
+}

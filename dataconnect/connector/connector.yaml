@@ -1,0 +1,3 @@
+specVersion: "v1alpha"
+connectorId: "matchday-connector"
+authMode: "PUBLIC"

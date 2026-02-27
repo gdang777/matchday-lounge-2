@@ -1,0 +1,125 @@
+# MatchDay Lounge — Data Connect Read Queries (PostgreSQL)
+
+# ── Venues ────────────────────────────────────────────────────────────────────
+
+query ListVenues($city: String) @auth(level: PUBLIC) {
+  venues(where: { city: { eq: $city } }, orderBy: { name: ASC }) {
+    id
+    name
+    slug
+    description
+    address
+    city
+    province
+    capacity
+    logoUrl
+    coverImageUrl
+    isVerified
+  }
+}
+
+query GetVenue($slug: String!) @auth(level: PUBLIC) {
+  venue(key: { slug: $slug }) {
+    id
+    name
+    slug
+    description
+    address
+    city
+    province
+    capacity
+    websiteUrl
+    phoneNumber
+    logoUrl
+    coverImageUrl
+    isVerified
+    promotions {
+      id
+      title
+      type
+      startsAt
+      expiresAt
+      isActive
+      imageUrl
+    }
+  }
+}
+
+# ── Promotions ────────────────────────────────────────────────────────────────
+
+query ListPromotionsByVenue($venueId: UUID!) @auth(level: PUBLIC) {
+  promotions(
+    where: { venueId: { eq: $venueId }, isActive: { eq: true } }
+    orderBy: { startsAt: DESC }
+  ) {
+    id
+    title
+    description
+    type
+    imageUrl
+    startsAt
+    expiresAt
+    redemptionLimit
+    redemptionCount
+  }
+}
+
+query ListActivePromotions($city: String) @auth(level: PUBLIC) {
+  promotions(
+    where: {
+      isActive: { eq: true }
+      venue: { city: { eq: $city } }
+    }
+    orderBy: { startsAt: DESC }
+    limit: 20
+  ) {
+    id
+    title
+    description
+    type
+    imageUrl
+    startsAt
+    expiresAt
+    venue {
+      id
+      name
+      slug
+      city
+      logoUrl
+    }
+  }
+}
+
+# ── Subscriptions ─────────────────────────────────────────────────────────────
+
+query GetMySubscription($userId: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  subscription(key: { userId: $userId }) {
+    id
+    plan
+    status
+    currentPeriodStart
+    currentPeriodEnd
+    cancelledAt
+  }
+}
+
+# ── Boosts ────────────────────────────────────────────────────────────────────
+
+query ListActiveBoostsByPromotion($promotionId: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  boosts(
+    where: { promotionId: { eq: $promotionId }, status: { eq: ACTIVE } }
+    orderBy: { startsAt: ASC }
+  ) {
+    id
+    status
+    targetCity
+    targetRadiusKm
+    targetTeamId
+    budgetCents
+    spentCents
+    impressions
+    clicks
+    startsAt
+    expiresAt
+  }
+}

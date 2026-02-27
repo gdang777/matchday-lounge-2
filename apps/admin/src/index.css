@@ -1,0 +1,438 @@
+/* MatchDay Lounge — App Admin Panel */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --green: #00C566;
+    --green-dim: rgba(0, 197, 102, 0.1);
+    --black: #0A0E14;
+    --navy: #0F1923;
+    --border: #1a2535;
+    --white: #F4F6F0;
+    --muted: #8A9099;
+    --amber: #F5A623;
+    --red: #E84040;
+    --font-head: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 12px;
+    --sidebar-w: 220px;
+}
+
+body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Auth ── */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse 60% 40% at 50% -10%, rgba(245, 166, 35, 0.08), transparent 60%), var(--black);
+    padding: 24px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 40px 36px;
+}
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-head);
+    font-size: 1.3rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 20px;
+}
+
+.admin-warning {
+    background: rgba(245, 166, 35, 0.1);
+    border: 1px solid rgba(245, 166, 35, 0.25);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--amber);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field label {
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.field input {
+    background: var(--black);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.field input:focus {
+    border-color: var(--amber);
+}
+
+.auth-trust {
+    display: flex;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    margin-top: 16px;
+}
+
+/* ── App layout ── */
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--navy);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 12px;
+    flex-shrink: 0;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-head);
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    padding: 0 8px 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--white);
+}
+
+.nav-item.active {
+    background: var(--green-dim);
+    color: var(--green);
+}
+
+.nav-icon {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-badge {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    background: rgba(245, 166, 35, 0.12);
+    color: var(--amber);
+    border: 1px solid rgba(245, 166, 35, 0.25);
+    border-radius: 999px;
+    padding: 4px 10px;
+    text-align: center;
+}
+
+/* ── Main ── */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.page-title {
+    font-family: var(--font-head);
+    font-size: 1.7rem;
+    letter-spacing: 0.04em;
+}
+
+.page-sub {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.city-toggle {
+    display: flex;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.city-btn {
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    border: none;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.city-btn.active {
+    background: var(--green-dim);
+    color: var(--green);
+}
+
+/* ── Stats ── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    padding: 22px 28px 0;
+}
+
+.stat-card {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-card.green {
+    border-color: rgba(0, 197, 102, 0.25);
+}
+
+.stat-card.amber {
+    border-color: rgba(245, 166, 35, 0.25);
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.stat-value {
+    font-family: var(--font-head);
+    font-size: 1.8rem;
+}
+
+.stat-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+/* ── Content ── */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    padding: 18px 28px 28px;
+}
+
+.panel {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.panel-title {
+    font-family: var(--font-head);
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+}
+
+.panel-empty {
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+/* ── Health list ── */
+.health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.health-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.health-dot {
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+}
+
+.health-dot.online {
+    color: var(--green);
+}
+
+.health-dot.idle {
+    color: var(--muted);
+}
+
+/* ── Coming soon ── */
+.coming-soon {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: var(--muted);
+    padding: 60px;
+    text-align: center;
+}
+
+.coming-icon {
+    font-size: 3rem;
+}
+
+.coming-soon h2 {
+    font-family: var(--font-head);
+    font-size: 2rem;
+    letter-spacing: 0.04em;
+    color: var(--white);
+}
+
+.coming-soon p {
+    font-size: 0.9rem;
+}
+
+/* ── Buttons ── */
+.btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+}
+
+.btn-primary {
+    background: var(--green);
+    color: #000;
+}
+
+.btn-primary:hover {
+    background: #00b05a;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.82rem;
+    padding: 8px;
+}
+
+.btn-ghost:hover {
+    color: var(--white);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.accent {
+    color: var(--green);
+}

@@ -1,0 +1,129 @@
+################################################################################
+# MatchDay Lounge — Cloud Build CI/CD Pipeline
+# Triggered on push to: main
+# Region: northamerica-northeast1
+# PRD Reference: Section 14.4
+################################################################################
+
+steps:
+  # ────────────────────────────────────────────────────────────────────────────
+  # STEP 1: Install all workspace dependencies
+  # ────────────────────────────────────────────────────────────────────────────
+  - name: 'node:20-slim'
+    id: 'install'
+    entrypoint: 'npm'
+    args: ['install', '--frozen-lockfile']
+    env:
+      - 'NODE_ENV=development'
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # STEP 2: Build all web apps (fan portal, restaurant portal, admin panel)
+  # ────────────────────────────────────────────────────────────────────────────
+  - name: 'node:20-slim'
+    id: 'build-apps'
+    entrypoint: 'npx'
+    args: ['turbo', 'build', '--filter=@matchday/web', '--filter=@matchday/restaurant', '--filter=@matchday/admin']
+    waitFor: ['install']
+    env:
+      - 'NODE_ENV=production'
+      - 'VITE_FIREBASE_PROJECT_ID=$PROJECT_ID'
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # STEP 3: Deploy all Firebase Hosting sites (web + restaurant + admin)
+  # ────────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'deploy-hosting'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        npm install -g firebase-tools
+        firebase deploy --only hosting --project $PROJECT_ID --non-interactive
+    waitFor: ['build-apps']
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # STEP 4: Build Cloud Run API TypeScript
+  # ────────────────────────────────────────────────────────────────────────────
+  - name: 'node:20-slim'
+    id: 'build-api'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'cd services/api && npm install && npm run build'
+    waitFor: ['install']
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # STEP 5: Build API Docker image and push to Artifact Registry
+  # ────────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-api-image'
+    args:
+      - 'build'
+      - '-t'
+      - 'northamerica-northeast1-docker.pkg.dev/$PROJECT_ID/matchday/api:$COMMIT_SHA'
+      - '-t'
+      - 'northamerica-northeast1-docker.pkg.dev/$PROJECT_ID/matchday/api:latest'
+      - 'services/api'
+    waitFor: ['build-api']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-api-image'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'northamerica-northeast1-docker.pkg.dev/$PROJECT_ID/matchday/api'
+    waitFor: ['build-api-image']
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # STEP 6: Deploy API container to Cloud Run (northamerica-northeast1)
+  # ────────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'deploy-cloud-run'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'matchday-api'
+      - '--image=northamerica-northeast1-docker.pkg.dev/$PROJECT_ID/matchday/api:$COMMIT_SHA'
+      - '--region=northamerica-northeast1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--port=8080'
+      - '--set-secrets=ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest'
+      - '--project=$PROJECT_ID'
+    waitFor: ['push-api-image']
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # STEP 7: Deploy Firebase Functions
+  # ────────────────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'deploy-functions'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd services/functions && npm install && npm run build
+        cd ../..
+        npm install -g firebase-tools
+        firebase deploy --only functions --project $PROJECT_ID --non-interactive
+    waitFor: ['install']
+
+# ────────────────────────────────────────────────────────────────────────────
+# Build configuration
+# ────────────────────────────────────────────────────────────────────────────
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '900s'   # 15 min max — target is under 8 min (PRD §14.4)
+
+substitutions:
+  _REGION: northamerica-northeast1
+
+images:
+  - 'northamerica-northeast1-docker.pkg.dev/$PROJECT_ID/matchday/api:$COMMIT_SHA'
+  - 'northamerica-northeast1-docker.pkg.dev/$PROJECT_ID/matchday/api:latest'

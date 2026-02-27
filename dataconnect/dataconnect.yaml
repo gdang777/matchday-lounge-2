@@ -1,6 +1,6 @@
 specVersion: "v1alpha"
 serviceId: "matchday-data-connect"
-location: "us-central1"
+location: "northamerica-northeast1"
 
 schema:
   source: "./schema"
@@ -8,7 +8,7 @@ schema:
     postgresql:
       database: "matchday"
       cloudSql:
-        instanceId: "matchday-lounge-2:us-central1:matchday-db"
+        instanceId: "matchday-lounge-2:northamerica-northeast1:matchday-db"
 
 connectorDirs:
   - "./connector"

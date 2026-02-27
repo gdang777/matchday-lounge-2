@@ -1,0 +1,419 @@
+/* MatchDay Lounge — Restaurant Partner Portal */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --green: #00C566;
+    --green-dim: rgba(0, 197, 102, 0.12);
+    --black: #0A0E14;
+    --navy: #0F1923;
+    --border: #1a2535;
+    --white: #F4F6F0;
+    --muted: #8A9099;
+    --amber: #F5A623;
+    --red: #E84040;
+    --font-head: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 12px;
+}
+
+body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Auth ── */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0, 197, 102, 0.1), transparent 70%), var(--black);
+    padding: 24px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 40px 36px;
+}
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-head);
+    font-size: 1.4rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 28px;
+}
+
+.auth-logo .logo-icon {
+    font-size: 1.6rem;
+}
+
+.auth-title {
+    font-family: var(--font-head);
+    font-size: 2rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+
+.auth-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 28px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field label {
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.field input {
+    background: var(--black);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.field input:focus {
+    border-color: var(--green);
+}
+
+.auth-footer {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+}
+
+.auth-footer a {
+    color: var(--green);
+    text-decoration: none;
+}
+
+.auth-trust {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    margin-top: 20px;
+}
+
+/* ── App layout ── */
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--navy);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-head);
+    font-size: 1.2rem;
+    letter-spacing: 0.04em;
+    padding: 0 8px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    margin-top: 12px;
+}
+
+.nav-item {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.15s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--white);
+}
+
+.nav-item.active {
+    background: var(--green-dim);
+    color: var(--green);
+}
+
+/* ── Main ── */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+}
+
+.page-title {
+    font-family: var(--font-head);
+    font-size: 1.8rem;
+    letter-spacing: 0.04em;
+}
+
+.page-sub {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+.status-badge {
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+.status-badge.pending {
+    background: rgba(245, 166, 35, 0.12);
+    color: var(--amber);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+}
+
+/* ── Stats ── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 24px 32px 0;
+}
+
+.stat-card {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.stat-value {
+    font-family: var(--font-head);
+    font-size: 2rem;
+    letter-spacing: 0.02em;
+}
+
+.stat-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+/* ── Content grid ── */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 20px 32px 32px;
+}
+
+.panel {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.panel-title {
+    font-family: var(--font-head);
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+}
+
+.panel-empty {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+
+/* ── Boost tiers ── */
+.boost-tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tier {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+}
+
+.tier.featured {
+    border-color: rgba(0, 197, 102, 0.3);
+    background: var(--green-dim);
+}
+
+.tier.premium {
+    border-color: rgba(245, 166, 35, 0.3);
+    background: rgba(245, 166, 35, 0.08);
+}
+
+.tier-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.tier-price {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.tier-badge.current {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: var(--muted);
+}
+
+/* ── Buttons ── */
+.btn {
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+}
+
+.btn-primary {
+    background: var(--green);
+    color: #000;
+}
+
+.btn-primary:hover {
+    background: #00b05a;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--white);
+}
+
+.btn-outline:hover {
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.btn-amber {
+    background: var(--amber);
+    color: #000;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.btn-ghost:hover {
+    color: var(--white);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+.accent {
+    color: var(--green);
+}

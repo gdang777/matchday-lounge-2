@@ -5,8 +5,9 @@
   "targets": {
     "matchday-lounge-2": {
       "hosting": {
-        "web": ["matchday-web"],
-        "admin": ["matchday-admin"]
+        "web":        ["matchday-web"],
+        "restaurant": ["matchday-restaurant"],
+        "admin":      ["matchday-admin"]
       }
     }
   }

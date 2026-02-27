@@ -1,0 +1,28 @@
+type User @table {
+  id: UUID! @default(expr: "uuidV4()")
+  displayName: String!
+  email: String! @unique
+  role: String! @default(value: "fan")
+  avatarUrl: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Match @table {
+  id: UUID! @default(expr: "uuidV4()")
+  homeTeam: String!
+  awayTeam: String!
+  competition: String!
+  kickoffAt: Timestamp!
+  venue: String!
+  city: String!
+}
+
+type Gig @table {
+  id: UUID! @default(expr: "uuidV4()")
+  title: String!
+  description: String!
+  city: String!
+  postedBy: User!
+  createdAt: Timestamp! @default(expr: "request.time")
+  expiresAt: Timestamp
+}

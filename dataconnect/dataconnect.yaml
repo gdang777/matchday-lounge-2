@@ -1,0 +1,14 @@
+specVersion: "v1alpha"
+serviceId: "matchday-data-connect"
+location: "us-central1"
+
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "matchday"
+      cloudSql:
+        instanceId: "matchday-lounge-2:us-central1:matchday-db"
+
+connectorDirs:
+  - "./connector"

@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "matchday-lounge-2"
+  },
+  "targets": {
+    "matchday-lounge-2": {
+      "hosting": {
+        "web": ["matchday-web"],
+        "admin": ["matchday-admin"]
+      }
+    }
+  }
+}

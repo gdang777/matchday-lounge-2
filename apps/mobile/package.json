@@ -1,0 +1,19 @@
+{
+    "name": "@matchday/mobile",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "start": "expo start",
+        "android": "expo start --android",
+        "ios": "expo start --ios"
+    },
+    "dependencies": {
+        "expo": "~51.0.0",
+        "react": "18.2.0",
+        "react-native": "0.74.5"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3.0",
+        "typescript": "^5.4.0"
+    }
+}

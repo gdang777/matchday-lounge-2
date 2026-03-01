@@ -29,6 +29,20 @@
             ]
         },
         {
+            "collectionGroup": "fixtures",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "kickoffAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
             "collectionGroup": "checkIns",
             "queryScope": "COLLECTION",
             "fields": [
@@ -71,11 +85,11 @@
             ]
         },
         {
-            "collectionGroup": "gigs",
+            "collectionGroup": "dealAlerts",
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "city",
+                    "fieldPath": "userId",
                     "order": "ASCENDING"
                 },
                 {

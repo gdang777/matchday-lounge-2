@@ -1,4 +1,5 @@
 # MatchDay Lounge — Data Connect Read Queries (PostgreSQL)
+# v2.0 — FIFA World Cup 2026 Edition
 
 # ── Venues ────────────────────────────────────────────────────────────────────
 
@@ -9,34 +10,54 @@ query ListVenues($city: String) @auth(level: PUBLIC) {
     slug
     description
     address
+    neighborhood
     city
     province
-    capacity
+    cuisineType
+    priceRange
     logoUrl
     coverImageUrl
     isVerified
+    isFanVenue
+    boostTier
+    latitude
+    longitude
   }
 }
 
-query GetVenue($slug: String!) @auth(level: PUBLIC) {
+query GetVenueBySlug($slug: String!) @auth(level: PUBLIC) {
   venue(key: { slug: $slug }) {
     id
     name
     slug
     description
     address
+    neighborhood
     city
     province
+    cuisineType
+    priceRange
     capacity
     websiteUrl
     phoneNumber
+    googleMapsUrl
     logoUrl
     coverImageUrl
+    openingHours
     isVerified
+    isFanVenue
+    boostTier
+    latitude
+    longitude
     promotions {
       id
       title
+      description
       type
+      dealType
+      daysOfWeek
+      startTime
+      endTime
       startsAt
       expiresAt
       isActive
@@ -45,7 +66,131 @@ query GetVenue($slug: String!) @auth(level: PUBLIC) {
   }
 }
 
-# ── Promotions ────────────────────────────────────────────────────────────────
+query ListFeaturedVenues($city: String!) @auth(level: PUBLIC) {
+  venues(
+    where: {
+      city: { eq: $city }
+      boostTier: { in: [FEATURED, PREMIUM] }
+    }
+    orderBy: { boostTier: DESC }
+  ) {
+    id
+    name
+    slug
+    neighborhood
+    logoUrl
+    coverImageUrl
+    isVerified
+    isFanVenue
+    boostTier
+    latitude
+    longitude
+  }
+}
+
+query SearchVenues(
+  $city: String!
+  $neighborhood: String
+  $cuisineType: String
+) @auth(level: PUBLIC) {
+  venues(
+    where: {
+      city: { eq: $city }
+      neighborhood: { eq: $neighborhood }
+      cuisineType: { eq: $cuisineType }
+    }
+    orderBy: { boostTier: DESC }
+  ) {
+    id
+    name
+    slug
+    description
+    address
+    neighborhood
+    city
+    cuisineType
+    priceRange
+    logoUrl
+    coverImageUrl
+    isVerified
+    isFanVenue
+    boostTier
+    latitude
+    longitude
+  }
+}
+
+# ── Happy Hours / Promotions ─────────────────────────────────────────────────
+
+query ListActivePromotions($city: String) @auth(level: PUBLIC) {
+  promotions(
+    where: {
+      isActive: { eq: true }
+      approvalStatus: { eq: APPROVED }
+      venue: { city: { eq: $city } }
+    }
+    orderBy: { startsAt: DESC }
+    limit: 50
+  ) {
+    id
+    title
+    description
+    type
+    dealType
+    daysOfWeek
+    startTime
+    endTime
+    imageUrl
+    startsAt
+    expiresAt
+    venue {
+      id
+      name
+      slug
+      neighborhood
+      city
+      logoUrl
+      boostTier
+      latitude
+      longitude
+      googleMapsUrl
+    }
+  }
+}
+
+query ListHappyHours($city: String!) @auth(level: PUBLIC) {
+  promotions(
+    where: {
+      isActive: { eq: true }
+      type: { eq: HAPPY_HOUR }
+      approvalStatus: { eq: APPROVED }
+      venue: { city: { eq: $city } }
+    }
+    orderBy: { startsAt: DESC }
+    limit: 50
+  ) {
+    id
+    title
+    description
+    dealType
+    daysOfWeek
+    startTime
+    endTime
+    imageUrl
+    venue {
+      id
+      name
+      slug
+      neighborhood
+      city
+      logoUrl
+      boostTier
+      latitude
+      longitude
+      googleMapsUrl
+    }
+  }
+}
 
 query ListPromotionsByVenue($venueId: UUID!) @auth(level: PUBLIC) {
   promotions(
@@ -56,6 +201,10 @@ query ListPromotionsByVenue($venueId: UUID!) @auth(level: PUBLIC) {
     title
     description
     type
+    dealType
+    daysOfWeek
+    startTime
+    endTime
     imageUrl
     startsAt
     expiresAt
@@ -64,28 +213,27 @@ query ListPromotionsByVenue($venueId: UUID!) @auth(level: PUBLIC) {
   }
 }
 
-query ListActivePromotions($city: String) @auth(level: PUBLIC) {
+# ── Pending Review Queue (Admin) ─────────────────────────────────────────────
+
+query ListPendingPromotions @auth(level: USER_EMAIL_VERIFIED) {
   promotions(
-    where: {
-      isActive: { eq: true }
-      venue: { city: { eq: $city } }
-    }
-    orderBy: { startsAt: DESC }
-    limit: 20
+    where: { approvalStatus: { eq: PENDING } }
+    orderBy: { createdAt: ASC }
   ) {
     id
     title
     description
     type
-    imageUrl
-    startsAt
-    expiresAt
+    dealType
+    source
+    sourceUrl
+    approvalStatus
+    createdAt
     venue {
       id
       name
-      slug
       city
-      logoUrl
+      neighborhood
     }
   }
 }
@@ -103,23 +251,54 @@ query GetMySubscription($userId: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
   }
 }
 
+# ── Users ─────────────────────────────────────────────────────────────────────
+
+query GetUserByFirebaseUid($firebaseUid: String!) @auth(level: USER_EMAIL_VERIFIED) {
+  users(where: { firebaseUid: { eq: $firebaseUid } }) {
+    id
+    displayName
+    email
+    role
+    avatarUrl
+    city
+  }
+}
+
 # ── Boosts ────────────────────────────────────────────────────────────────────
 
-query ListActiveBoostsByPromotion($promotionId: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+query ListActiveBoosts($city: String) @auth(level: USER_EMAIL_VERIFIED) {
   boosts(
-    where: { promotionId: { eq: $promotionId }, status: { eq: ACTIVE } }
-    orderBy: { startsAt: ASC }
+    where: { status: { eq: ACTIVE }, targetCity: { eq: $city } }
+    orderBy: { tier: DESC }
   ) {
     id
+    tier
     status
-    targetCity
-    targetRadiusKm
-    targetTeamId
-    budgetCents
-    spentCents
-    impressions
-    clicks
     startsAt
     expiresAt
+    venue {
+      id
+      name
+      slug
+      city
+      neighborhood
+    }
+  }
+}
+
+# ── Audit Log ─────────────────────────────────────────────────────────────────
+
+query ListAuditLogs @auth(level: USER_EMAIL_VERIFIED) {
+  auditLogs(orderBy: { createdAt: DESC }, limit: 100) {
+    id
+    action
+    targetType
+    targetId
+    details
+    createdAt
+    adminUser {
+      displayName
+      email
+    }
   }
 }

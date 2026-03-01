@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "MatchDay Lounge",
+    "slug": "matchday-lounge",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "matchdaylounge",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0E14"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.matchdaylounge.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "MatchDay Lounge uses your location to find nearby bars, happy hours, and fan zones for World Cup matches.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "MatchDay Lounge uses your background location to send you smart deal alerts near match venues (Pro feature)."
+      }
+    },
+    "android": {
+      "package": "com.matchdaylounge.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0E14",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "matchday-lounge"
+      }
+    }
+  }
+}

@@ -1,20 +1,19 @@
 # Firebase Data Connect — PostgreSQL Schema
-# Structured, relational data: Venue, Promotion, Boost, Subscription, User
+# MatchDay Lounge v2.0 — FIFA World Cup 2026 Edition
+# Structured, relational data: User, Venue, Promotion, Boost, Subscription
 
 # ── Enums ─────────────────────────────────────────────────────────────────────
 
 enum UserRole {
   FAN
-  ORGANISER
   VENUE_OWNER
   ADMIN
 }
 
 enum SubscriptionPlan {
   FREE
-  FAN_PLUS
-  VENUE_PRO
-  ENTERPRISE
+  PRO_MONTHLY         # $7.99 CAD/month
+  PRO_TOURNAMENT      # $14.99 CAD one-time (June 11 – July 19)
 }
 
 enum SubscriptionStatus {
@@ -25,11 +24,16 @@ enum SubscriptionStatus {
 }
 
 enum PromotionType {
-  MATCH_DAY_DEAL
   HAPPY_HOUR
+  MATCH_DAY_DEAL
+  FLASH_DEAL
   FAN_DISCOUNT
-  LOYALTY_REWARD
-  SPONSORED
+}
+
+enum BoostTier {
+  STANDARD             # Free — default distance order
+  FEATURED             # $79/month — top of neighborhood, Deal badge
+  PREMIUM              # $149/month — homepage + top of all results, Official Fan Venue badge
 }
 
 enum BoostStatus {
@@ -37,6 +41,24 @@ enum BoostStatus {
   ACTIVE
   PAUSED
   EXPIRED
+}
+
+enum DealType {
+  DRINKS
+  FOOD
+  BOTH
+}
+
+enum ListingSource {
+  MANUAL               # Venue owner submitted via restaurant portal
+  SCRAPED              # Apify scraper — pending review
+  USER_TIP             # Fan-submitted deal tip — pending review
+}
+
+enum ListingApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 # ── User ───────────────────────────────────────────────────────────────────────
@@ -48,12 +70,17 @@ type User @table {
   email: String! @unique
   role: UserRole! @default(value: "FAN")
   avatarUrl: String
-  city: String
+  city: String                             # "Vancouver" or "Toronto"
+  preferredNeighborhoods: [String!]        # Pro preference — deal alert filtering
+  quietHoursStart: String                  # "22:00" — Pro preference
+  quietHoursEnd: String                    # "08:00" — Pro preference
+  dealTypePreference: DealType             # Pro pref — DRINKS, FOOD, or BOTH
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
 
   # Relations
   subscription: Subscription @relation(fields: ["id"], references: ["userId"])
+  venues: [Venue!]! @relation(fields: ["id"], references: ["ownerId"])
 }
 
 # ── Venue ──────────────────────────────────────────────────────────────────────
@@ -64,40 +91,56 @@ type Venue @table {
   slug: String! @unique
   description: String
   address: String!
-  city: String!
+  neighborhood: String!                    # e.g. "Gastown", "Yaletown", "King West"
+  city: String!                            # "Vancouver" or "Toronto"
   province: String!
   postalCode: String
   country: String! @default(value: "CA")
   latitude: Float
   longitude: Float
   capacity: Int
+  cuisineType: String                      # e.g. "Mexican", "Pub", "Italian"
+  priceRange: Int                          # 1–4 ($–$$$$)
   websiteUrl: String
   phoneNumber: String
+  googleMapsUrl: String                    # Direct Google Maps link
   logoUrl: String
   coverImageUrl: String
-  isVerified: Boolean! @default(value: false)
-  ownerId: UUID!                       # FK → User.id (venue owner)
+  openingHours: String                     # JSON — e.g. {"mon":"11:00-23:00","tue":"11:00-23:00",...}
+  isVerified: Boolean! @default(value: false)     # Green checkmark — manually approved
+  isFanVenue: Boolean! @default(value: false)     # "Official Fan Venue" badge (Premium tier)
+  boostTier: BoostTier! @default(value: "STANDARD")
+  ownerId: UUID!                           # FK → User.id (venue owner)
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
 
   # Relations
+  owner: User! @relation(fields: ["ownerId"], references: ["id"])
   promotions: [Promotion!]! @relation(fields: ["id"], references: ["venueId"])
 }
 
-# ── Promotion ─────────────────────────────────────────────────────────────────
+# ── Promotion (Happy Hours & Deals) ──────────────────────────────────────────
 
 type Promotion @table {
   id: UUID! @default(expr: "uuidV4()")
-  venueId: UUID!                       # FK → Venue.id
+  venueId: UUID!                           # FK → Venue.id
   title: String!
   description: String!
   type: PromotionType!
+  dealType: DealType                       # DRINKS, FOOD, or BOTH
+  daysOfWeek: [String!]                    # e.g. ["mon","tue","wed","thu","fri"]
+  startTime: String                        # "15:00" — daily start time
+  endTime: String                          # "18:00" — daily end time
   imageUrl: String
   termsUrl: String
-  startsAt: Timestamp!
-  expiresAt: Timestamp
+  startsAt: Timestamp!                     # Overall campaign start date
+  expiresAt: Timestamp                     # Overall campaign end date (null = ongoing)
   isActive: Boolean! @default(value: true)
-  redemptionLimit: Int                 # null = unlimited
+  source: ListingSource! @default(value: "MANUAL")
+  approvalStatus: ListingApprovalStatus! @default(value: "APPROVED")  # MANUAL = auto-approved
+  sourceUrl: String                        # For scraped deals — original page URL
+  submittedByUserId: UUID                  # For user-submitted tips — FK → User.id
+  redemptionLimit: Int                     # null = unlimited
   redemptionCount: Int! @default(value: 0)
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
@@ -107,34 +150,30 @@ type Promotion @table {
   boosts: [Boost!]! @relation(fields: ["id"], references: ["promotionId"])
 }
 
-# ── Boost ─────────────────────────────────────────────────────────────────────
+# ── Boost (Paid visibility upgrades) ────────────────────────────────────────
 
 type Boost @table {
   id: UUID! @default(expr: "uuidV4()")
-  promotionId: UUID!                   # FK → Promotion.id
+  venueId: UUID!                           # FK → Venue.id (denormalized for quick lookups)
+  promotionId: UUID                        # FK → Promotion.id (optional — can boost entire venue)
+  tier: BoostTier!                         # FEATURED ($79/mo) or PREMIUM ($149/mo)
   status: BoostStatus! @default(value: "DRAFT")
+  stripeSubscriptionId: String             # Stripe subscription managing this boost
   targetCity: String
-  targetRadiusKm: Float
-  targetMinAge: Int
-  targetMaxAge: Int
-  targetTeamId: String                 # e.g. "toronto-fc" — match fan segments
-  budgetCents: Int!                    # Total budget in cents
-  spentCents: Int! @default(value: 0)
-  impressions: Int! @default(value: 0)
-  clicks: Int! @default(value: 0)
   startsAt: Timestamp!
   expiresAt: Timestamp!
   createdAt: Timestamp! @default(expr: "request.time")
 
   # Relations
-  promotion: Promotion! @relation(fields: ["promotionId"], references: ["id"])
+  venue: Venue! @relation(fields: ["venueId"], references: ["id"])
+  promotion: Promotion @relation(fields: ["promotionId"], references: ["id"])
 }
 
-# ── Subscription ──────────────────────────────────────────────────────────────
+# ── Subscription (Pro tier for fans) ────────────────────────────────────────
 
 type Subscription @table {
   id: UUID! @default(expr: "uuidV4()")
-  userId: UUID! @unique                # FK → User.id (one subscription per user)
+  userId: UUID! @unique                    # FK → User.id (one subscription per user)
   plan: SubscriptionPlan! @default(value: "FREE")
   status: SubscriptionStatus! @default(value: "ACTIVE")
   stripeCustomerId: String
@@ -147,4 +186,19 @@ type Subscription @table {
 
   # Relations
   user: User! @relation(fields: ["userId"], references: ["id"])
+}
+
+# ── Admin Audit Log ─────────────────────────────────────────────────────────
+
+type AuditLog @table {
+  id: UUID! @default(expr: "uuidV4()")
+  adminUserId: UUID!                       # FK → User.id (admin who performed action)
+  action: String!                          # e.g. "APPROVE_VENUE", "REJECT_PROMOTION", "SUSPEND_VENUE"
+  targetType: String!                      # e.g. "Venue", "Promotion", "User"
+  targetId: String!                        # UUID of the affected record
+  details: String                          # JSON — additional context
+  createdAt: Timestamp! @default(expr: "request.time")
+
+  # Relations
+  adminUser: User! @relation(fields: ["adminUserId"], references: ["id"])
 }

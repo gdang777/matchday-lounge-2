@@ -1,4 +1,39 @@
 # MatchDay Lounge — Data Connect Write Mutations (PostgreSQL)
+# v2.0 — FIFA World Cup 2026 Edition
+
+# ── Users ─────────────────────────────────────────────────────────────────────
+
+mutation CreateUser(
+  $firebaseUid: String!
+  $displayName: String!
+  $email: String!
+  $city: String
+) @auth(level: USER_EMAIL_VERIFIED) {
+  user_insert(data: {
+    firebaseUid: $firebaseUid
+    displayName: $displayName
+    email: $email
+    city: $city
+    role: FAN
+  })
+}
+
+mutation UpdateUserPreferences(
+  $id: UUID!
+  $city: String
+  $preferredNeighborhoods: [String!]
+  $quietHoursStart: String
+  $quietHoursEnd: String
+  $dealTypePreference: DealType
+) @auth(level: USER_EMAIL_VERIFIED) {
+  user_update(key: { id: $id }, data: {
+    city: $city
+    preferredNeighborhoods: $preferredNeighborhoods
+    quietHoursStart: $quietHoursStart
+    quietHoursEnd: $quietHoursEnd
+    dealTypePreference: $dealTypePreference
+  })
+}
 
 # ── Venues ────────────────────────────────────────────────────────────────────
 
@@ -7,12 +42,17 @@ mutation CreateVenue(
   $slug: String!
   $description: String
   $address: String!
+  $neighborhood: String!
   $city: String!
   $province: String!
   $postalCode: String
+  $cuisineType: String
+  $priceRange: Int
   $capacity: Int
   $websiteUrl: String
   $phoneNumber: String
+  $googleMapsUrl: String
+  $openingHours: String
   $ownerId: UUID!
 ) @auth(level: USER_EMAIL_VERIFIED) {
   venue_insert(data: {
@@ -20,12 +60,17 @@ mutation CreateVenue(
     slug: $slug
     description: $description
     address: $address
+    neighborhood: $neighborhood
     city: $city
     province: $province
     postalCode: $postalCode
+    cuisineType: $cuisineType
+    priceRange: $priceRange
     capacity: $capacity
     websiteUrl: $websiteUrl
     phoneNumber: $phoneNumber
+    googleMapsUrl: $googleMapsUrl
+    openingHours: $openingHours
     ownerId: $ownerId
   })
 }
@@ -34,29 +79,67 @@ mutation UpdateVenue(
   $id: UUID!
   $name: String
   $description: String
+  $neighborhood: String
+  $cuisineType: String
+  $priceRange: Int
   $capacity: Int
   $websiteUrl: String
+  $phoneNumber: String
+  $googleMapsUrl: String
+  $openingHours: String
+  $logoUrl: String
+  $coverImageUrl: String
   $isVerified: Boolean
+  $isFanVenue: Boolean
+  $boostTier: BoostTier
 ) @auth(level: USER_EMAIL_VERIFIED) {
   venue_update(key: { id: $id }, data: {
     name: $name
     description: $description
+    neighborhood: $neighborhood
+    cuisineType: $cuisineType
+    priceRange: $priceRange
     capacity: $capacity
     websiteUrl: $websiteUrl
+    phoneNumber: $phoneNumber
+    googleMapsUrl: $googleMapsUrl
+    openingHours: $openingHours
+    logoUrl: $logoUrl
+    coverImageUrl: $coverImageUrl
     isVerified: $isVerified
+    isFanVenue: $isFanVenue
+    boostTier: $boostTier
   })
 }
 
-# ── Promotions ────────────────────────────────────────────────────────────────
+mutation SetVenueLocation(
+  $id: UUID!
+  $latitude: Float!
+  $longitude: Float!
+) @auth(level: USER_EMAIL_VERIFIED) {
+  venue_update(key: { id: $id }, data: {
+    latitude: $latitude
+    longitude: $longitude
+  })
+}
+
+# ── Promotions / Happy Hours ─────────────────────────────────────────────────
 
 mutation CreatePromotion(
   $venueId: UUID!
   $title: String!
   $description: String!
   $type: PromotionType!
+  $dealType: DealType
+  $daysOfWeek: [String!]
+  $startTime: String
+  $endTime: String
   $imageUrl: String
   $startsAt: Timestamp!
   $expiresAt: Timestamp
+  $source: ListingSource!
+  $sourceUrl: String
+  $submittedByUserId: UUID
   $redemptionLimit: Int
 ) @auth(level: USER_EMAIL_VERIFIED) {
   promotion_insert(data: {
@@ -64,34 +147,54 @@ mutation CreatePromotion(
     title: $title
     description: $description
     type: $type
+    dealType: $dealType
+    daysOfWeek: $daysOfWeek
+    startTime: $startTime
+    endTime: $endTime
     imageUrl: $imageUrl
     startsAt: $startsAt
     expiresAt: $expiresAt
+    source: $source
+    sourceUrl: $sourceUrl
+    submittedByUserId: $submittedByUserId
     redemptionLimit: $redemptionLimit
+    approvalStatus: PENDING
   })
+}
+
+mutation ApprovePromotion($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  promotion_update(key: { id: $id }, data: { approvalStatus: APPROVED })
+}
+
+mutation RejectPromotion($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  promotion_update(key: { id: $id }, data: { approvalStatus: REJECTED, isActive: false })
 }
 
 mutation DeactivatePromotion($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
   promotion_update(key: { id: $id }, data: { isActive: false })
 }
 
+mutation ActivatePromotion($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  promotion_update(key: { id: $id }, data: { isActive: true })
+}
+
 # ── Boosts ────────────────────────────────────────────────────────────────────
 
 mutation CreateBoost(
-  $promotionId: UUID!
+  $venueId: UUID!
+  $promotionId: UUID
+  $tier: BoostTier!
   $targetCity: String
-  $targetRadiusKm: Float
-  $targetTeamId: String
-  $budgetCents: Int!
+  $stripeSubscriptionId: String
   $startsAt: Timestamp!
   $expiresAt: Timestamp!
 ) @auth(level: USER_EMAIL_VERIFIED) {
   boost_insert(data: {
+    venueId: $venueId
     promotionId: $promotionId
+    tier: $tier
     targetCity: $targetCity
-    targetRadiusKm: $targetRadiusKm
-    targetTeamId: $targetTeamId
-    budgetCents: $budgetCents
+    stripeSubscriptionId: $stripeSubscriptionId
     startsAt: $startsAt
     expiresAt: $expiresAt
     status: DRAFT
@@ -104,6 +207,10 @@ mutation ActivateBoost($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
 
 mutation PauseBoost($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
   boost_update(key: { id: $id }, data: { status: PAUSED })
+}
+
+mutation ExpireBoost($id: UUID!) @auth(level: USER_EMAIL_VERIFIED) {
+  boost_update(key: { id: $id }, data: { status: EXPIRED })
 }
 
 # ── Subscriptions ─────────────────────────────────────────────────────────────
@@ -139,5 +246,23 @@ mutation UpdateSubscription(
     status: $status
     currentPeriodEnd: $currentPeriodEnd
     cancelledAt: $cancelledAt
+  })
+}
+
+# ── Audit Log ─────────────────────────────────────────────────────────────────
+
+mutation CreateAuditLog(
+  $adminUserId: UUID!
+  $action: String!
+  $targetType: String!
+  $targetId: String!
+  $details: String
+) @auth(level: USER_EMAIL_VERIFIED) {
+  auditLog_insert(data: {
+    adminUserId: $adminUserId
+    action: $action
+    targetType: $targetType
+    targetId: $targetId
+    details: $details
   })
 }

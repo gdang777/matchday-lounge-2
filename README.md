@@ -1,31 +1,56 @@
-# MatchDay Lounge 2
+# ⚽ MatchDay Lounge
 
-> A sports fan platform — live schedules, fan chat, gigs, and properties — all in one lounge.
+> **Your City. Your Match. Your Night.**
+>
+> The AI-powered city companion for FIFA World Cup 2026 fans in Canada.
+> Launching in **Vancouver, BC** and **Toronto, ON** — June 11, 2026.
+
+## What It Does
+
+MatchDay Lounge bridges two audiences: **international fans** seeking frictionless navigation of an unfamiliar city, and **local bars and restaurants** hungry for match-day foot traffic.
+
+- 🍻 **Happy Hour Finder** — Map + list view of real-time deals, filtered by neighborhood, deal type, and "Open Now"
+- 📅 **Match Day Hub** — Live scores, fixtures, fan zone locations, real-time crowd counts at nearby venues
+- 🗺️ **City Navigation** — SkyTrain/TTC guides, airport-to-downtown routes, stadium directions
+- 🆘 **Emergency Help** — 24hr pharmacies, clinics, late-night food, embassy contacts, one-tap 911
+- 🤖 **AI Concierge** (Pro) — Conversational assistant powered by Claude — ask anything about the city
+- 📍 **Smart Deal Alerts** (Pro) — Proactive push notifications near great deals before kickoff
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Mobile App | React Native + Expo SDK 55 |
+| Web Portals | React + Vite + TypeScript |
+| Structured Database | Firebase Data Connect (Cloud SQL Postgres) |
+| Real-Time Database | Cloud Firestore |
+| Authentication | Firebase Authentication |
+| Backend API | Cloud Run (Node.js + Express) |
+| AI Model | Claude Sonnet 4.6 (via Cloud Run) |
+| Payments | Stripe |
+| Push Notifications | Firebase Cloud Messaging |
+| Maps | Google Maps SDK |
+| CI/CD | Cloud Build + GitHub |
 
 ## Monorepo Structure
 
 ```
-matchday-lounge-2/
+matchday-lounge/
 ├── apps/
-│   ├── web/          # Fan portal — React + Vite (Firebase Hosting: matchday-web)
-│   └── mobile/       # React Native / Expo (coming soon)
+│   ├── web/          # Fan landing page — React + Vite (Firebase Hosting)
+│   ├── mobile/       # React Native + Expo (iOS & Android)
+│   ├── restaurant/   # Restaurant Admin Portal — React + Vite
+│   └── admin/        # App Admin Panel — React + Vite
 ├── services/
-│   ├── api/          # Node/Express REST API — Cloud Run
+│   ├── api/          # Cloud Run API — Claude proxy, Stripe webhooks
 │   ├── functions/    # Firebase Cloud Functions
-│   └── scraper/      # Sports data scraper (Cloud Run / scheduled)
+│   └── scraper/      # Happy hour scraper (Cloud Run + Cloud Scheduler)
 ├── packages/
-│   └── shared/       # Shared TypeScript types used across apps & services
+│   └── shared/       # Shared TypeScript types used across all surfaces
 ├── dataconnect/      # Firebase Data Connect (GraphQL schema + Cloud SQL)
-├── firebase.json     # Firebase config (Hosting ×2, Firestore, Storage, Functions)
+├── firebase.json     # Firebase config (Hosting ×3, Firestore, Storage, Functions)
 └── .firebaserc       # Firebase project aliases
 ```
-
-## Prerequisites
-
-- [Node.js 20+](https://nodejs.org) (use `nvm use` to switch automatically)
-- [Firebase CLI](https://firebase.google.com/docs/cli): `npm install -g firebase-tools`
-- [Google Cloud SDK](https://cloud.google.com/sdk) (for Cloud Run deploys)
-- [Turborepo](https://turbo.build): included as a dev dependency
 
 ## Quick Start — Local Dev
 
@@ -43,68 +68,42 @@ cd services/api && npm run dev
 npx turbo dev
 ```
 
-Hit `GET http://localhost:8080/health` to verify the API is running.
-
 ## Deploy
 
-### Firebase Hosting
-
 ```bash
-# Build the web app
-cd apps/web && npm run build && cd ../..
+# Build all apps
+npx turbo build
 
-# Deploy both hosting sites
-firebase deploy --only hosting
-```
+# Deploy everything to Firebase
+firebase deploy
 
-### Cloud Run (API)
-
-```bash
-# Build TypeScript
-cd services/api && npm run build && cd ../..
-
-# Deploy to Cloud Run (first time — creates the service)
+# Deploy Cloud Run API
 gcloud run deploy matchday-api \
   --source services/api \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --project matchday-lounge-2
-```
-
-### Firebase Functions
-
-```bash
-cd services/functions && npm run build && cd ../..
-firebase deploy --only functions
-```
-
-### Firestore Rules & Indexes
-
-```bash
-firebase deploy --only firestore
-```
-
-### Storage Rules
-
-```bash
-firebase deploy --only storage
-```
-
-### Everything at once
-
-```bash
-npx turbo build
-firebase deploy
+  --region northamerica-northeast1 \
+  --project matchday-lounge
 ```
 
 ## Firebase Services
 
-| Service       | Status     | Notes                                  |
-|---------------|------------|----------------------------------------|
-| Auth          | ✅ Enabled | Email/Password + Google                |
-| Firestore     | ✅ Enabled | Rules in `firestore.rules`             |
-| Storage       | ✅ Enabled | Rules in `storage.rules`               |
-| Hosting (web) | ✅ Enabled | Target: `matchday-web`                 |
-| Hosting (admin)| 🔜 Planned| Target: `matchday-admin`               |
-| Functions     | ✅ Scaffold| `services/functions/src/index.ts`      |
-| Data Connect  | ✅ Scaffold| `dataconnect/` — Cloud SQL PostgreSQL  |
+| Service | Status | Notes |
+|---------|--------|-------|
+| Auth | ✅ Enabled | Email/Password + Google Sign-In |
+| Firestore | ✅ Enabled | Rules in `firestore.rules` |
+| Storage | ✅ Enabled | Rules in `storage.rules` |
+| Hosting (web) | ✅ Enabled | Target: `matchday-web` |
+| Hosting (restaurant) | ✅ Scaffold | Target: `matchday-restaurant` |
+| Hosting (admin) | ✅ Scaffold | Target: `matchday-admin` |
+| Functions | ✅ Scaffold | `services/functions/src/index.ts` |
+| Data Connect | ✅ Schema ready | `dataconnect/schema/schema.gql` |
+
+## Key Dates
+
+- **March 1, 2026** — Development sprint begins
+- **May 15, 2026** — App Store / Google Play submission deadline
+- **June 11, 2026** — FIFA World Cup 2026 kicks off
+- **July 19, 2026** — Tournament final
+
+---
+
+*MatchDay Lounge • PRD v2.0 • 100% Google Cloud • Confidential*
